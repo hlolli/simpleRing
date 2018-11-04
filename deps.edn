@@ -1,0 +1,4 @@
+{:paths ["./"]
+ :deps
+ {org.clojure/clojure     {:mvn/version "1.9.0"}
+  ring/ring-jetty-adapter {:mvn/version "1.7.1"}}}
