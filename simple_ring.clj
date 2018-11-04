@@ -17,17 +17,22 @@
     (if-let [endpoint (get endpoints (:uri request))]
       (if-not (token-auth endpoint (:headers request))
         (respond {:status 500 :body "Authorization failed!"})
-        (do (when-let [shell-string (:shell endpoint)]
-              (let  [{:keys [exit out err]} (sh "sh" "-c" shell-string)]
+        (do (when-let [script (:script endpoint)]
+              (let  [{:keys [exit out err]} (sh "sh" "-c" script)]
+                (println "script exit code: " exit)
+                (when-not (empty? out) (println "STDOUT: " out))
+                (when-not (empty? err) (println "STDERR: " err))))
+            (when-let [shell (:shell endpoint)]
+              (let  [{:keys [exit out err]} (sh shell)]
                 (println "shell script exit code: " exit)
                 (when-not (empty? out) (println "STDOUT: " out))
                 (when-not (empty? err) (println "STDERR: " err))))
             (respond {:status 200 :body (or (:response-body endpoint) "")})))
       (respond {:status 404}))))
 
-(defn -main [env]
-  (assert (not (empty? env)) "You must provide config to env!")
-  (let [{:keys [port host endpoints]} (read-string env)
+(defn -main [config-path]
+  (assert (not (empty? config-path)) "You must provide path to edn config file!")
+  (let [{:keys [port host endpoints]} (read-string (slurp config-path))
         handler                       (create-handler endpoints)]
     (run-jetty handler {:port   (or port 1988)
                         :async? true
