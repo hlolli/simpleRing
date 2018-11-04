@@ -3,14 +3,13 @@
             [clojure.java.shell :refer [sh]]))
 
 (defn token-auth [endpoint headers]
-  (prn endpoint headers)
   (cond (contains? endpoint :gitlab-token)
         (let [gitlab-token (get endpoint :gitlab-token)]
-          (= gitlab-token (get headers "X-Gitlab-Token")))
+          (= gitlab-token (get headers "x-gitlab-token")))
         (contains? endpoint :github-signature)
         (let [github-signature (get endpoint :github-signature)]
           ;; signature digest missing!
-          (= github-signature (get headers "X-Hub-Signature")))
+          (= github-signature (get headers "x-hub-signature")))
         :else true))
 
 (defn create-handler [endpoints]
