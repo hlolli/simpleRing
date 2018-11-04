@@ -3,6 +3,7 @@
             [clojure.java.shell :refer [sh]]))
 
 (defn token-auth [endpoint headers]
+  (prn endpoint headers)
   (cond (contains? endpoint :gitlab-token)
         (let [gitlab-token (get endpoint :gitlab-token)]
           (= gitlab-token (get headers "X-Gitlab-Token")))
@@ -17,7 +18,8 @@
     (if-let [endpoint (get endpoints (:uri request))]
       (if-not (token-auth endpoint (:headers request))
         (respond {:status 500 :body "Authorization failed!"})
-        (do (when-let [script (:script endpoint)]
+        (do (respond {:status 200 :body (or (:response-body endpoint) "")})
+            (when-let [script (:script endpoint)]
               (let  [{:keys [exit out err]} (sh "sh" "-c" script)]
                 (println "script exit code: " exit)
                 (when-not (empty? out) (println "STDOUT: " out))
@@ -26,8 +28,7 @@
               (let  [{:keys [exit out err]} (sh shell)]
                 (println "shell script exit code: " exit)
                 (when-not (empty? out) (println "STDOUT: " out))
-                (when-not (empty? err) (println "STDERR: " err))))
-            (respond {:status 200 :body (or (:response-body endpoint) "")})))
+                (when-not (empty? err) (println "STDERR: " err))))))
       (respond {:status 404}))))
 
 (defn -main [config-path]
